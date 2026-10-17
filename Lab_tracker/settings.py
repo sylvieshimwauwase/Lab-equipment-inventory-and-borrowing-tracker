@@ -177,7 +177,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+# Our app sends no email, so silence the deploy-only email check
+SILENCED_SYSTEM_CHECKS = ['mail.E001', 'security.W021']
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600          
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True

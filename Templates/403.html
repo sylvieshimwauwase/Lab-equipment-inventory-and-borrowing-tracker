@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Access denied{% endblock %}
+{% block page_title %}Access denied{% endblock %}
+
+{% block content %}
+<div class="card card-danger col-md-8 p-0">
+  <div class="card-body">
+    <p class="lead"><i class="fas fa-lock"></i> Your role does not allow this action.</p>
+    <p>Ask a manager or an administrator if you need this permission.</p>
+  </div>
+  <div class="card-footer">
+    <a href="{% url 'dashboard' %}" class="btn btn-default">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

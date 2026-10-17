@@ -1,0 +1,40 @@
+:root {
+  --brand: #0f766e;        /* change this one color to retheme the app */
+  --brand-dark: #115e59;
+}
+
+/* Active sidebar link */
+.sidebar-dark-teal .nav-sidebar > .nav-item > .nav-link.active {
+  background-color: var(--brand);
+  color: #fff;
+}
+
+/* Primary buttons */
+.btn-primary {
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--brand-dark);
+  border-color: var(--brand-dark);
+}
+
+/* Card headers (add/edit forms) */
+.card-primary:not(.card-outline) > .card-header {
+  background-color: var(--brand);
+}
+
+/* Pagination */
+.page-item.active .page-link {
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+.page-link { color: var(--brand); }
+
+/* Links inside the page content (not buttons) */
+.content-wrapper a:not(.btn):not(.page-link) { color: var(--brand); }
+.content-wrapper a:not(.btn):not(.page-link):hover { color: var(--brand-dark); }
+
+/* Softer page background */
+.content-wrapper { background-color: #f1f5f9; }

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Categories{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    {% if perms.Inventory.add_category %}
+    <a href="{% url 'inventory:category_add' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> Add Category
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover">
+      <thead>
+        <tr><th>Name</th><th>Description</th><th>Items</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for c in categories %}
+        <tr>
+          <td>
+            <a href="{% url 'inventory:item_list' %}?category={{ c.pk }}">{{ c.name }}</a>
+          </td>
+          <td>{{ c.description|default:"-" }}</td>
+          <td><span class="badge badge-info">{{ c.item_count }}</span></td>
+          <td>
+            {% if perms.Inventory.change_category %}
+              <a href="{% url 'inventory:category_edit' c.pk %}" class="btn btn-xs btn-info">Edit</a>
+            {% endif %}
+            {% if perms.Inventory.delete_category %}
+              <a href="{% url 'inventory:category_delete' c.pk %}" class="btn btn-xs btn-danger">Delete</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center">No categories yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'includes/pagination.html' %}
+</div>
+{% endblock %}

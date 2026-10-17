@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Borrowing{% endblock %}
+{% block page_title %}Borrow Records{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form method="get" class="form-inline">
+      <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm mr-2"
+             placeholder="Search item, serial, borrower or ID">
+
+      <select name="status" class="form-control form-control-sm mr-2">
+        <option value="">Any status</option>
+        <option value="borrowed" {% if selected_status == 'borrowed' %}selected{% endif %}>Borrowed</option>
+        <option value="overdue" {% if selected_status == 'overdue' %}selected{% endif %}>Overdue</option>
+        <option value="returned" {% if selected_status == 'returned' %}selected{% endif %}>Returned</option>
+      </select>
+
+      <button type="submit" class="btn btn-sm btn-secondary mr-2">Filter</button>
+      <a href="{% url 'borrowing:record_list' %}" class="btn btn-sm btn-default mr-2">Reset</a>
+      {% if perms.Borrowing.add_borrowrecord %}
+      <a href="{% url 'borrowing:borrow_new' %}" class="btn btn-primary btn-sm ml-auto">
+        <i class="fas fa-plus"></i> Borrow an Item
+      </a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Borrower</th>
+          <th>Borrowed</th>
+          <th>Due</th>
+          <th>Returned</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr {% if r.is_overdue %}class="table-danger"{% endif %}>
+          <td>{{ r.item.name }}</td>
+          <td>{{ r.borrower.full_name }}</td>
+          <td>{{ r.date_borrowed }}</td>
+          <td>{{ r.due_date }}</td>
+          <td>{{ r.date_returned|default:"-" }}</td>
+          <td>
+            {% if r.status == 'returned' %}<span class="badge badge-success">Returned</span>
+            {% elif r.is_overdue %}<span class="badge badge-danger">Overdue</span>
+            {% else %}<span class="badge badge-warning">Borrowed</span>{% endif %}
+          </td>
+          <td>
+            {% if r.status != 'returned' and perms.Borrowing.change_borrowrecord %}
+            <form method="post" action="{% url 'borrowing:return_item' r.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-xs btn-success">Mark returned</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center">No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'includes/pagination.html' %}
+</div>
+{% endblock %}

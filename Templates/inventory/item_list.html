@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Items{% endblock %}
+{% block page_title %}Equipment Items{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form method="get" class="form-inline">
+      <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm mr-2"
+             placeholder="Search name or serial">
+
+      <select name="category" class="form-control form-control-sm mr-2">
+        <option value="">All categories</option>
+        {% for c in categories %}
+          <option value="{{ c.pk }}" {% if selected_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="available" class="form-control form-control-sm mr-2">
+        <option value="">Any availability</option>
+        <option value="yes" {% if selected_available == 'yes' %}selected{% endif %}>Available</option>
+        <option value="no" {% if selected_available == 'no' %}selected{% endif %}>Not available</option>
+      </select>
+
+      <button type="submit" class="btn btn-sm btn-secondary mr-2">Filter</button>
+      <a href="{% url 'inventory:item_list' %}" class="btn btn-sm btn-default mr-2">Reset</a>
+      {% if perms.Inventory.add_item %}
+      <a href="{% url 'inventory:item_add' %}" class="btn btn-primary btn-sm ml-auto">
+        <i class="fas fa-plus"></i> Add Item
+      </a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Serial</th>
+          <th>Category</th>
+          <th>Condition</th>
+          <th>Available</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td><a href="{% url 'inventory:item_detail' item.pk %}">{{ item.name }}</a></td>
+          <td>{{ item.serial_number }}</td>
+          <td>{{ item.category.name }}</td>
+          <td>{{ item.get_condition_display }}</td>
+          <td>
+            {% if item.is_available %}<span class="badge badge-success">Yes</span>
+            {% else %}<span class="badge badge-secondary">No</span>{% endif %}
+          </td>
+          <td>
+            {% if perms.Inventory.change_item %}
+              <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-xs btn-info">Edit</a>
+            {% endif %}
+            {% if perms.Inventory.delete_item %}
+              <a href="{% url 'inventory:item_delete' item.pk %}" class="btn btn-xs btn-danger">Delete</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center">No items found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'includes/pagination.html' %}
+</div>
+{% endblock %}

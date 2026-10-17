@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Page not found{% endblock %}
+{% block page_title %}Page not found{% endblock %}
+
+{% block content %}
+<div class="card card-warning card-outline col-md-8 p-0">
+  <div class="card-body">
+    <p class="lead"><i class="fas fa-search"></i> We could not find that page.</p>
+    <p>The link may be wrong, or the record may have been deleted.</p>
+  </div>
+  <div class="card-footer">
+    <a href="{% url 'dashboard' %}" class="btn btn-default">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

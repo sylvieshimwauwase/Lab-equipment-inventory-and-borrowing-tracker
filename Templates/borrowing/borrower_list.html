@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Borrowers{% endblock %}
+{% block page_title %}Borrowers{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form method="get" class="form-inline">
+      <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm mr-2"
+             placeholder="Search name, ID or phone">
+
+      <select name="department" class="form-control form-control-sm mr-2">
+        <option value="">All departments</option>
+        {% for d in departments %}
+          <option value="{{ d }}" {% if selected_department == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="btn btn-sm btn-secondary mr-2">Filter</button>
+      <a href="{% url 'borrowing:borrower_list' %}" class="btn btn-sm btn-default mr-2">Reset</a>
+      {% if perms.Borrowing.add_borrower %}
+      <a href="{% url 'borrowing:borrower_add' %}" class="btn btn-primary btn-sm ml-auto">
+        <i class="fas fa-plus"></i> Add Borrower
+      </a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Name</th><th>Student ID</th><th>Phone</th><th>Email</th><th>Department</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in borrowers %}
+        <tr>
+          <td>{{ b.full_name }}</td>
+          <td>{{ b.student_id }}</td>
+          <td>{{ b.phone }}</td>
+          <td>{{ b.email|default:"-" }}</td>
+          <td>{{ b.department }}</td>
+          <td>
+            {% if perms.Borrowing.change_borrower %}
+              <a href="{% url 'borrowing:borrower_edit' b.pk %}" class="btn btn-xs btn-info">Edit</a>
+            {% endif %}
+            {% if perms.Borrowing.delete_borrower %}
+              <a href="{% url 'borrowing:borrower_delete' b.pk %}" class="btn btn-xs btn-danger">Delete</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center">No borrowers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'includes/pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Summary cards -->
+<div class="row">
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-teal">
+      <div class="inner"><h3>{{ total_items }}</h3><p>Total Items</p></div>
+      <div class="icon"><i class="fas fa-boxes"></i></div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-indigo">
+      <div class="inner"><h3>{{ available_items }}</h3><p>Available Items</p></div>
+      <div class="icon"><i class="fas fa-check"></i></div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-orange">
+      <div class="inner"><h3>{{ borrowed_count }}</h3><p>Currently Borrowed</p></div>
+      <div class="icon"><i class="fas fa-hand-holding"></i></div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-maroon">
+      <div class="inner"><h3>{{ overdue_count }}</h3><p>Overdue Items</p></div>
+      <div class="icon"><i class="fas fa-clock"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">Items per category</h3></div>
+      <div class="card-body">
+        <div style="height:260px;"><canvas id="categoryChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">Borrowings per month (last 6 months)</h3></div>
+      <div class="card-body">
+        <div style="height:260px;"><canvas id="monthlyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overdue and due soon -->
+<div class="row">
+  <div class="col-md-6">
+    <div class="card card-danger card-outline">
+      <div class="card-header"><h3 class="card-title">Overdue</h3></div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover">
+          <thead><tr><th>Item</th><th>Borrower</th><th>Was due</th></tr></thead>
+          <tbody>
+            {% for r in overdue_records %}
+            <tr>
+              <td>{{ r.item.name }}</td>
+              <td>{{ r.borrower.full_name }}</td>
+              <td class="text-danger">{{ r.due_date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-muted">Nothing is overdue.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer">
+        <a href="{% url 'borrowing:record_list' %}?status=overdue">See all overdue</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card card-warning card-outline">
+      <div class="card-header"><h3 class="card-title">Due in the next 7 days</h3></div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover">
+          <thead><tr><th>Item</th><th>Borrower</th><th>Due</th></tr></thead>
+          <tbody>
+            {% for r in due_soon_records %}
+            <tr>
+              <td>{{ r.item.name }}</td>
+              <td>{{ r.borrower.full_name }}</td>
+              <td>{{ r.due_date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-muted">Nothing due soon.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer">
+        <a href="{% url 'borrowing:record_list' %}?status=borrowed">See all borrowed</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent records -->
+<div class="card">
+  <div class="card-header"><h3 class="card-title">Recent Borrow Records</h3></div>
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover">
+      <thead>
+        <tr><th>Item</th><th>Borrower</th><th>Due Date</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for r in recent_records %}
+        <tr>
+          <td>{{ r.item.name }}</td>
+          <td>{{ r.borrower.full_name }}</td>
+          <td>{{ r.due_date }}</td>
+          <td>{{ r.display_status }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center">No records yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Data for the charts, passed safely from Django to JavaScript -->
+{{ category_chart|json_script:"category-data" }}
+{{ monthly_chart|json_script:"monthly-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'adminlte/plugins/chart.js/Chart.min.js' %}"></script>
+<script>
+  const categoryData = JSON.parse(document.getElementById('category-data').textContent);
+  const monthlyData = JSON.parse(document.getElementById('monthly-data').textContent);
+  const palette = ['#0d9488', '#4f46e5', '#f97316', '#be123c', '#0ea5e9', '#84cc16', '#a855f7', '#64748b'];
+
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: categoryData.labels,
+      datasets: [{
+        data: categoryData.values,
+        backgroundColor: categoryData.labels.map((_, i) => palette[i % palette.length])
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, legend: { position: 'right' } }
+  });
+
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: monthlyData.labels,
+      datasets: [{ label: 'Borrowings', data: monthlyData.values, backgroundColor: '#0d9488' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      legend: { display: false },
+      scales: { yAxes: [{ ticks: { beginAtZero: true, precision: 0 } }] }
+    }
+  });
+</script>
+{% endblock %}

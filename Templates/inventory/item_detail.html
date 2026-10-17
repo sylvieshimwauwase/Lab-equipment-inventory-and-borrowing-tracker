@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.name }}{% endblock %}
+{% block page_title %}{{ item.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card card-primary">
+      <div class="card-header"><h3 class="card-title">Item details</h3></div>
+      <div class="card-body">
+        <p><strong>Serial number:</strong> {{ item.serial_number }}</p>
+        <p><strong>Category:</strong> {{ item.category.name }}</p>
+        <p><strong>Condition:</strong> {{ item.get_condition_display }}</p>
+        <p><strong>Available:</strong> {{ item.is_available|yesno:"Yes,No" }}</p>
+        <p><strong>Date added:</strong> {{ item.date_added }}</p>
+      </div>
+      <div class="card-footer">
+        {% if perms.Inventory.change_item %}
+          <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-info btn-sm">Edit</a>
+        {% endif %}
+        {% if perms.Inventory.delete_item %}
+          <a href="{% url 'inventory:item_delete' item.pk %}" class="btn btn-danger btn-sm">Delete</a>
+        {% endif %}
+        <a href="{% url 'inventory:item_list' %}" class="btn btn-default btn-sm">Back</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">Borrowing history</h3></div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover">
+          <thead>
+            <tr><th>Borrower</th><th>Borrowed</th><th>Due</th><th>Returned</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for r in item.borrow_records.all %}
+            <tr>
+              <td>{{ r.borrower.full_name }}</td>
+              <td>{{ r.date_borrowed }}</td>
+              <td>{{ r.due_date }}</td>
+              <td>{{ r.date_returned|default:"-" }}</td>
+              <td>{{ r.display_status }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">Never borrowed.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

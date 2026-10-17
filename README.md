@@ -6,7 +6,7 @@ what, and shows availability and overdue items on an AdminLTE dashboard.
 Midterm project: Web Technologies and API Services.
 
 **Live demo:** https://YOUR-APP.onrender.com
-**Repository:** https://github.com/YOUR-USERNAME/lab-tracker
+**Repository:** https://github.com/sylvieshimwauwase/Lab-equipment-inventory-and-borrowing-tracker.git
 
 ## Features
 

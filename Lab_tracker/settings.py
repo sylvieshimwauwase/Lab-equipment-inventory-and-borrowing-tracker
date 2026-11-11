@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 import os
-import tempfile
+import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -86,24 +86,33 @@ WSGI_APPLICATION = "Lab_tracker.wsgi.application"
 #         "NAME": BASE_DIR / "db.sqlite3",
 #     }
 # }
-ca_path = BASE_DIR / os.getenv('DB_SSL_CA', 'ca.pem')
-ca_content = os.getenv('DB_SSL_CA_CONTENT')
-if ca_content:
-    ca_path = Path(tempfile.gettempdir()) / 'aiven-ca.pem'
-    ca_path.write_text(ca_content.replace('\\n', '\n'))
+# ca_path = BASE_DIR / os.getenv('DB_SSL_CA', 'ca.pem')
+# ca_content = os.getenv('DB_SSL_CA_CONTENT')
+# if ca_content:
+#     ca_path = Path(tempfile.gettempdir()) / 'aiven-ca.pem'
+#     ca_path.write_text(ca_content.replace('\\n', '\n'))
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER'),
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': os.getenv('DB_HOST'),
+#         'PORT': os.getenv('DB_PORT'),
+#         'OPTIONS': {
+#             'ssl': {'ca': str(ca_path)},
+#             'charset': 'utf8mb4',
+#         },
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        'OPTIONS': {
-            'ssl': {'ca': str(ca_path)},
-            'charset': 'utf8mb4',
-        },
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True,
+    )
 }
 
 # Password validation

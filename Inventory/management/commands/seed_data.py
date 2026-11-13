@@ -90,7 +90,7 @@ class Command(BaseCommand):
             else:                # returned in the past
                 borrowed = today - timedelta(days=random.randint(20, 40))
                 due = borrowed + timedelta(days=10)
-                returned = borrowed + timedelta(days=random.randint(2, 9))
+                returned = borrowed + timedelta(days=random.randint(2, 14))
 
             BorrowRecord.objects.create(
                 item=item, borrower=borrower, date_borrowed=borrowed,

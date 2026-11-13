@@ -3,9 +3,11 @@ from datetime import date
 from django.db.models import Count, Q
 from django.urls import include, path
 from rest_framework import routers, serializers, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
+from Analytics.features import record_features
 from Borrowing.models import Borrower, BorrowRecord
 from Inventory.models import Category, Item
 
@@ -102,6 +104,20 @@ def stats(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def training_data(request):
+    """One row per returned loan: the model inputs plus the answer (returned_late)."""
+    rows = []
+    returned = BorrowRecord.objects.filter(
+        date_returned__isnull=False).select_related('item', 'borrower')
+    for r in returned:
+        row = record_features(r.item, r.borrower, r.date_borrowed, r.due_date)
+        row['returned_late'] = int(r.date_returned > r.due_date)
+        rows.append(row)
+    return Response(rows)
+
+
 # ---------- URLs ----------
 router = routers.DefaultRouter()
 router.register('categories', CategoryViewSet, basename='api-category')
@@ -111,5 +127,6 @@ router.register('borrow-records', BorrowRecordViewSet, basename='api-borrowrecor
 
 urlpatterns = [
     path('stats/', stats, name='api-stats'),
+    path('training-data/', training_data, name='api-training-data'),
     path('', include(router.urls)),
 ]

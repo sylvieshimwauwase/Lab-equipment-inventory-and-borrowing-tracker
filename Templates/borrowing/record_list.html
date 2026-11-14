@@ -36,6 +36,7 @@
           <th>Due</th>
           <th>Returned</th>
           <th>Status</th>
+          <th title="Predicted chance of a late return">Late risk</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -53,6 +54,13 @@
             {% else %}<span class="badge badge-warning">Borrowed</span>{% endif %}
           </td>
           <td>
+            {% if r.risk and r.status != 'returned' %}
+              {% if r.risk.level == 'high' %}<span class="badge badge-danger">High {{ r.risk.percent }}%</span>
+              {% elif r.risk.level == 'medium' %}<span class="badge badge-warning">Medium {{ r.risk.percent }}%</span>
+              {% else %}<span class="badge badge-success">Low {{ r.risk.percent }}%</span>{% endif %}
+            {% else %}-{% endif %}
+          </td>
+          <td>
             {% if r.status != 'returned' and perms.Borrowing.change_borrowrecord %}
             <form method="post" action="{% url 'borrowing:return_item' r.pk %}" class="d-inline">
               {% csrf_token %}
@@ -62,7 +70,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="7" class="text-center">No records found.</td></tr>
+        <tr><td colspan="8" class="text-center">No records found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

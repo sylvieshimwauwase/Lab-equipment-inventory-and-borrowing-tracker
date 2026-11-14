@@ -1,16 +1,16 @@
 {
-  "trained_at": "2026-11-12 08:46",
+  "trained_at": "2026-11-14 22:42",
   "source": "both",
   "rows": 2007,
-  "late_share": 0.242,
-  "accuracy": 0.673,
-  "auc": 0.735,
+  "late_share": 0.244,
+  "accuracy": 0.679,
+  "auc": 0.72,
   "importances": {
-    "loan_days": 0.384,
-    "weekday": 0.074,
-    "prior_loans": 0.106,
-    "prior_late_rate": 0.285,
-    "item_times_borrowed": 0.115,
-    "item_fair": 0.035
+    "borrow_days": 0.37,
+    "weekday": 0.068,
+    "prior_borrowings": 0.109,
+    "prior_late_rate": 0.286,
+    "item_times_borrowed": 0.13,
+    "item_fair": 0.037
   }
 }

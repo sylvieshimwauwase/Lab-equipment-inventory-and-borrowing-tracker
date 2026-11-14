@@ -17,25 +17,26 @@ MODEL_DIR = Path(__file__).resolve().parents[2] / 'ml_model'
 
 
 def make_synthetic(rows, seed=42):
-    """Fake loans with patterns we define: long loans, Fridays, fair items
-    and borrowers with a late history are more likely to be returned late."""
+    """Fake borrowings with patterns we define: long borrowing periods, Fridays,
+    items in fair condition and borrowers with a late history are more likely
+    to be returned late."""
     rng = np.random.default_rng(seed)
     df = pd.DataFrame({
-        'loan_days': rng.integers(3, 22, rows),
+        'borrow_days': rng.integers(3, 22, rows),
         'weekday': rng.integers(0, 7, rows),
-        'prior_loans': rng.integers(0, 15, rows),
+        'prior_borrowings': rng.integers(0, 15, rows),
         'item_times_borrowed': rng.integers(0, 30, rows),
         'item_fair': rng.integers(0, 2, rows),
     })
     df['prior_late_rate'] = np.where(
-        df['prior_loans'] == 0, 0.0, rng.beta(1.2, 4, rows)).round(3)
+        df['prior_borrowings'] == 0, 0.0, rng.beta(1.2, 4, rows)).round(3)
 
     logit = (-2.2
-             + 0.15 * (df['loan_days'] - 10)
+             + 0.15 * (df['borrow_days'] - 10)
              + 3.0 * df['prior_late_rate']
              + 0.6 * (df['weekday'] == 4)
              + 0.5 * df['item_fair']
-             - 0.05 * df['prior_loans'])
+             - 0.05 * df['prior_borrowings'])
     probability = 1 / (1 + np.exp(-logit))
     df['returned_late'] = (rng.random(rows) < probability).astype(int)
     return df
@@ -78,7 +79,9 @@ class Command(BaseCommand):
         data = pd.concat(frames, ignore_index=True)
         X, y = data[FEATURES], data['returned_late']
         if y.nunique() < 2:
-            raise CommandError('The data has only one outcome, so nothing can be learned.')
+            raise CommandError(
+                'The data has only one outcome (all on time or all late), '
+                'so nothing can be learned. Use --source both, or add late returns.')
 
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.25, random_state=42, stratify=y)
@@ -91,7 +94,8 @@ class Command(BaseCommand):
         auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
 
         MODEL_DIR.mkdir(exist_ok=True)
-        joblib.dump({'model': model, 'features': FEATURES}, MODEL_DIR / 'late_return_model.joblib')
+        joblib.dump({'model': model, 'features': FEATURES},
+                    MODEL_DIR / 'late_return_model.joblib')
         metrics = {
             'trained_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
             'source': options['source'],

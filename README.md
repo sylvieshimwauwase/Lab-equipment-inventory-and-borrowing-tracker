@@ -126,7 +126,7 @@ docs/          ER diagram, screenshots, report
 ## Group 5 members
 
 | Name | Student ID |
-|---|---|---|
+|---|---|
 | SHIMWA UWASE Sylvie | 20251MBI007 |
 | ISENGWE Olga | 20251MBI013 | 
 | RUKUNDO Patrick | 20251MBI057 | 

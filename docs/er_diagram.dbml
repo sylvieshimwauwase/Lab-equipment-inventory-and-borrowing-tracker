@@ -32,3 +32,12 @@ Table BorrowRecord {
   date_returned date [note: 'null until returned']
   status varchar(10) [note: 'borrowed / returned']
 }
+
+Table RiskPrediction {
+  id int [pk, increment]
+  record_id int [unique, not null, ref: - BorrowRecord.id]
+  probability float [note: 'chance of a late return, 0 to 1']
+  level varchar(6) [note: 'low / medium / high']
+  model_trained_at varchar(20)
+  created_at datetime
+}

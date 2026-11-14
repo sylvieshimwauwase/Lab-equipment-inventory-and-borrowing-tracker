@@ -32,7 +32,47 @@
   </div>
 </div>
 
-<!-- Charts -->
+<!-- Prediction KPIs -->
+<div class="row">
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">High-risk borrowings</span>
+        <span class="info-box-number">{{ high_risk_count }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-warning"><i class="fas fa-percentage"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Average late risk</span>
+        <span class="info-box-number">{% if average_risk is not None %}{{ average_risk }}%{% else %}-{% endif %}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-indigo"><i class="fas fa-history"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Past late-return rate</span>
+        <span class="info-box-number">{% if late_rate is not None %}{{ late_rate }}%{% else %}-{% endif %}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-teal"><i class="fas fa-brain"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Model accuracy</span>
+        <span class="info-box-number">{% if info %}{{ info.accuracy }}{% else %}-{% endif %}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts: inventory -->
 <div class="row">
   <div class="col-md-5">
     <div class="card">
@@ -47,6 +87,60 @@
       <div class="card-header"><h3 class="card-title">Borrowings per month (last 6 months)</h3></div>
       <div class="card-body">
         <div style="height:260px;"><canvas id="monthlyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Predictions: at-risk table and risk levels -->
+<div class="row">
+  <div class="col-md-7">
+    <div class="card card-danger card-outline">
+      <div class="card-header">
+        <h3 class="card-title">Borrowings most likely to be returned late</h3>
+      </div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover">
+          <thead>
+            <tr><th>Item</th><th>Borrower</th><th>Due</th><th>Late risk</th></tr>
+          </thead>
+          <tbody>
+            {% for p in at_risk %}
+            <tr>
+              <td>{{ p.record.item.name }}</td>
+              <td>{{ p.record.borrower.full_name }}</td>
+              <td>{{ p.record.due_date }}</td>
+              <td style="min-width:140px;">
+                <div class="progress progress-sm">
+                  <div class="progress-bar {% if p.level == 'high' %}bg-danger{% elif p.level == 'medium' %}bg-warning{% else %}bg-success{% endif %}"
+                       style="width: {{ p.percent }}%"></div>
+                </div>
+                <small>{{ p.get_level_display }} &middot; {{ p.percent }}%</small>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted">
+                No predictions yet.
+                {% if unscored %}Run <code>python manage.py score_records</code>.{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer">
+        <a href="{% url 'borrowing:record_list' %}?status=borrowed">See all borrowed items</a>
+        &nbsp;|&nbsp;
+        <a href="{% url 'analytics:risk_check' %}">Check a new borrowing</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">Risk levels of active borrowings</h3></div>
+      <div class="card-body">
+        <div style="height:260px;"><canvas id="riskChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -105,6 +199,48 @@
   </div>
 </div>
 
+<!-- Model: importance chart and model card -->
+<div class="row">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">What drives late returns (model factors, %)</h3></div>
+      <div class="card-body">
+        {% if importance_chart %}
+          <div style="height:260px;"><canvas id="importanceChart"></canvas></div>
+        {% else %}
+          <p class="text-muted mb-0">No trained model found. Run <code>python manage.py train_model</code>.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card card-teal card-outline">
+      <div class="card-header"><h3 class="card-title">Model card</h3></div>
+      <div class="card-body">
+        {% if info %}
+          <table class="table table-sm mb-2">
+            <tbody>
+              <tr><td>Type</td><td class="text-right">Random forest classifier</td></tr>
+              <tr><td>Trained</td><td class="text-right">{{ info.trained_at }}</td></tr>
+              <tr><td>Data source</td><td class="text-right">{{ info.source }}</td></tr>
+              <tr><td>Training rows</td><td class="text-right">{{ info.rows }}</td></tr>
+              <tr><td>Accuracy</td><td class="text-right">{{ info.accuracy }}</td></tr>
+              <tr><td>AUC</td><td class="text-right">{{ info.auc }}</td></tr>
+            </tbody>
+          </table>
+          {% if info.source != 'api' %}
+            <div class="alert alert-info py-2 mb-0">
+              Part of the training data is synthetic. Retrain as real borrowings are recorded.
+            </div>
+          {% endif %}
+        {% else %}
+          <p class="text-muted mb-0">No model information available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Recent records -->
 <div class="card">
   <div class="card-header"><h3 class="card-title">Recent Borrow Records</h3></div>
@@ -132,13 +268,18 @@
 <!-- Data for the charts, passed safely from Django to JavaScript -->
 {{ category_chart|json_script:"category-data" }}
 {{ monthly_chart|json_script:"monthly-data" }}
+{{ risk_chart|json_script:"risk-data" }}
+{{ importance_chart|json_script:"importance-data" }}
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'adminlte/plugins/chart.js/Chart.min.js' %}"></script>
 <script>
-  const categoryData = JSON.parse(document.getElementById('category-data').textContent);
-  const monthlyData = JSON.parse(document.getElementById('monthly-data').textContent);
+  const read = id => JSON.parse(document.getElementById(id).textContent);
+  const categoryData = read('category-data');
+  const monthlyData = read('monthly-data');
+  const riskData = read('risk-data');
+  const importanceData = read('importance-data');
   const palette = ['#0d9488', '#4f46e5', '#f97316', '#be123c', '#0ea5e9', '#84cc16', '#a855f7', '#64748b'];
 
   new Chart(document.getElementById('categoryChart'), {
@@ -166,5 +307,30 @@
       scales: { yAxes: [{ ticks: { beginAtZero: true, precision: 0 } }] }
     }
   });
+
+  new Chart(document.getElementById('riskChart'), {
+    type: 'doughnut',
+    data: {
+      labels: riskData.labels,
+      datasets: [{ data: riskData.values, backgroundColor: ['#28a745', '#ffc107', '#dc3545'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, legend: { position: 'right' } }
+  });
+
+  if (importanceData) {
+    new Chart(document.getElementById('importanceChart'), {
+      type: 'horizontalBar',
+      data: {
+        labels: importanceData.labels,
+        datasets: [{ label: 'Importance (%)', data: importanceData.values, backgroundColor: '#4f46e5' }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: { display: false },
+        scales: { xAxes: [{ ticks: { beginAtZero: true, precision: 0 } }] }
+      }
+    });
+  }
 </script>
 {% endblock %}

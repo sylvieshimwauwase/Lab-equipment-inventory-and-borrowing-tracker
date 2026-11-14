@@ -59,15 +59,6 @@ python manage.py train_model --source both --user ADMIN --password PASSWORD   # 
 python manage.py score_records --all
 ```
 
-## Screenshots
-
-| Dashboard | Risk Check |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Risk check](docs/screenshots/risk_check.png) |
-
-| Borrow records | Admin |
-|---|---|
-| ![Records](docs/screenshots/records.png) | ![Admin](docs/screenshots/admin.png) |
 
 ## Setup
 

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Risk Check{% endblock %}
+{% block page_title %}Late-Return Risk Check{% endblock %}
+
+{% block content %}
+<div class="row">
+
+  <!-- Input form -->
+  <div class="col-md-5">
+    <div class="card card-primary">
+      <div class="card-header"><h3 class="card-title">New borrowing</h3></div>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="card-body">
+          <p class="text-muted">
+            Enter the details of a planned borrowing to see how likely it is to be returned late.
+            Nothing is saved.
+          </p>
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          {% for field in form %}
+            <div class="form-group">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for error in field.errors %}
+                <small class="text-danger d-block">{{ error }}</small>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-chart-line"></i> Predict risk
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Result and model information -->
+  <div class="col-md-7">
+
+    {% if result %}
+    <div class="card card-outline
+      {% if result.level == 'high' %}card-danger{% elif result.level == 'medium' %}card-warning{% else %}card-success{% endif %}">
+      <div class="card-header">
+        <h3 class="card-title">Prediction for {{ result.item.name }} and {{ result.borrower.full_name }}</h3>
+      </div>
+      <div class="card-body">
+        <h2 class="mb-1">
+          {{ result.percent }}% chance of a late return
+          {% if result.level == 'high' %}<span class="badge badge-danger">High risk</span>
+          {% elif result.level == 'medium' %}<span class="badge badge-warning">Medium risk</span>
+          {% else %}<span class="badge badge-success">Low risk</span>{% endif %}
+        </h2>
+        <div class="progress mb-3">
+          <div class="progress-bar
+            {% if result.level == 'high' %}bg-danger{% elif result.level == 'medium' %}bg-warning{% else %}bg-success{% endif %}"
+               style="width: {{ result.percent }}%"></div>
+        </div>
+        <p><strong>Suggested action:</strong> {{ result.advice }}</p>
+
+        <h6 class="mt-4">What the model looked at</h6>
+        <table class="table table-sm">
+          <tbody>
+            {% for f in result.factors %}
+            <tr><td>{{ f.label }}</td><td class="text-right"><strong>{{ f.value }}</strong></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">About the model</h3></div>
+      <div class="card-body">
+        {% if info %}
+          <p>
+            <strong>Type:</strong> Random forest classifier<br>
+            <strong>Trained:</strong> {{ info.trained_at }} on {{ info.rows }} rows
+            (source: {{ info.source }})<br>
+            <strong>Accuracy:</strong> {{ info.accuracy }} &middot; <strong>AUC:</strong> {{ info.auc }}
+          </p>
+          {% if info.source != 'api' %}
+            <div class="alert alert-info py-2">
+              Part of the training data is synthetic, so treat predictions as guidance.
+              The model improves as real borrowings are recorded and it is retrained.
+            </div>
+          {% endif %}
+          <h6>Which factors matter most</h6>
+          {% for label, percent in importances %}
+            <div class="mb-2">
+              <small>{{ label }} ({{ percent }}%)</small>
+              <div class="progress progress-xs">
+                <div class="progress-bar bg-teal" style="width: {{ percent }}%"></div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted mb-0">
+            No trained model was found. Run <code>python manage.py train_model</code>.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
